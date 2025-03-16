@@ -1,0 +1,21 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      docker: 20
+    commands:
+      - curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.18.9/2020-11-02/bin/linux/amd64/kubectl
+      - chmod +x ./kubectl
+      - mv ./kubectl /usr/local/bin
+      - kubectl version --short --client
+  post_build:
+    commands:
+      - aws eks update-kubeconfig --region us-east-1 --name cloudmart
+      - kubectl get nodes
+      - ls
+      - IMAGE_URI=$(jq -r '.[0].imageUri' imagedefinitions.json)
+      - echo $IMAGE_URI
+      - sed -i "s|CONTAINER_IMAGE|$IMAGE_URI|g" cloudmart-frontend.yaml
+      - kubectl apply -f cloudmart-frontend.yaml
+

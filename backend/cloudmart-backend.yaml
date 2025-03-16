@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudmart-backend-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudmart-backend-app
+  template:
+    metadata:
+      labels:
+        app: cloudmart-backend-app
+    spec:
+      serviceAccountName: cloudmart-pod-execution-role
+      containers:
+      - name: cloudmart-backend-app
+        image: public.ecr.aws/k4h9b5t0/cloudmaster-backend:latest
+        env:
+        - name: PORT
+          value: "5000"
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: BEDROCK_AGENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: cloudmart-secrets
+              key: BEDROCK_AGENT_ID
+        - name: BEDROCK_AGENT_ALIAS_ID
+          valueFrom:
+            secretKeyRef:
+              name: cloudmart-secrets
+              key: BEDROCK_AGENT_ALIAS_ID
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: cloudmart-secrets
+              key: OPENAI_API_KEY
+        - name: OPENAI_ASSISTANT_ID
+          valueFrom:
+            secretKeyRef:
+              name: cloudmart-secrets
+              key: OPENAI_ASSISTANT_ID
+        - name: AZURE_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: cloudmart-secrets
+              key: AZURE_ENDPOINT
+        - name: AZURE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: cloudmart-secrets
+              key: AZURE_API_KEY
+           
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudmart-backend-app-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: cloudmart-backend-app
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+
+
+
+
+#kubectl create secret generic cloudmart-secrets \
+ # --from-literal=BEDROCK_AGENT_ID=seu_id_aqui \
+  #--from-literal=BEDROCK_AGENT_ALIAS_ID=seu_alias_id_aqui \
+  #--from-literal=OPENAI_API_KEY=sua_chave_api_aqui \
+  #--from-literal=OPENAI_ASSISTANT_ID=seu_assistant_id_aqui
